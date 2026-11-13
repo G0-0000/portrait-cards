@@ -1,0 +1,6 @@
+{
+  "layout:portrait-cards": {
+    "cmd-up": "agent.prev",
+    "cmd-down": "agent.next"
+  }
+}

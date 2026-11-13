@@ -1,0 +1,25 @@
+portrait-cards for Herdr
+
+mods/spaces-cards/main.js is derived from the `spaces` mod shipped with the
+Herdr app (https://github.com/herdrdev/herdr-app, defaults/mods/), licensed
+under the Apache License 2.0 (LICENSE-Herdr.txt). Changes: replaced the list
+render with a wrapping grid of horizontal cards (cardRows() / card()), added a
+28x28 round "New space" button, removed the machine and IP text, restyled the
+active card to a transparent fill with a 4px blue bar on the top edge, and
+pinned idle / hover card fills to #1c1c1c / #202020.
+
+mods/agents-cards/main.js is derived from the `agents` mod shipped with Herdr
+under the same license. Changes: replaced the list render with a wrapping grid
+of horizontal cards, added a 28x28 round sort button (Priority / Grouped by
+space popup), kept setAgentOrder() fed by the card list, restyled the active
+card to a transparent fill with a 4px blue bar on the bottom edge, and pinned
+idle / hover card fills as above.
+
+Icons referenced at mods/workspace-chrome/*.svg are Herdr's shipped assets and
+are not included in this repository.
+
+layouts/portrait-cards.json records cloned_from: main 0.1.15 (a clone of
+Herdr's shipped `main` layout).
+
+The App-generated gpui-kit.d.ts and jsconfig.json files were left out of the
+shared mod folders; Herdr recreates them on start.
