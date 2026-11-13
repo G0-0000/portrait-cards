@@ -21,6 +21,11 @@ a 4px blue bar — on top for projects, on the bottom for agents.
   because `terminal` outranks `global`. As a side effect the terminal no longer
   receives `⌘←` / `⌘→` for beginning/end of line — Ctrl-A / Ctrl-E still work,
   or drop those two keys from `terminal` to keep it.
+- **Trackpad swiping is not included.** Herdr turns a two-finger horizontal
+  swipe into a `MouseDown(Navigate)` event, which neither `keys.json` nor a mod
+  can read (the mod bridge reports it as `"left"`), so a swipe gesture needs a
+  system-level listener outside Herdr. Upstream request:
+  [herdr-app#249](https://github.com/herdrdev/herdr-app/issues/249).
 - **Gallery:** this repo carries the `herdr-layout` topic, so it appears at
   herdr.dev/layouts.
 
