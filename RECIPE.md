@@ -7,7 +7,8 @@ titles, no machine names or IP addresses. The active card drops its fill and
 outline altogether and is marked only by a 4px blue bar — on the **top** edge
 for projects, on the **bottom** edge for agents. Built for a portrait window
 (the preview is 2160x3840 physical pixels); the number of card columns follows
-the window width.
+the window width, and a band that runs out of room pages sideways rather than
+wrapping onto a second line.
 
 ![Portrait Cards](preview.png)
 
@@ -20,9 +21,12 @@ preview was captured at zoom 0.8):
   window. macOS traffic lights sit at `[12, 16]`; the system title bar is
   hidden.
 - **Projects band**, 110px, full width, panel fill `#161616`. Its root has
-  12px side padding, 10px top/bottom padding, 8px gaps and an always-on
-  vertical scrollbar. Cards are 84px tall, at least 120px wide, with 8px
-  padding, 4px inner gaps and 10px corners; a 1px border is present but fully
+  12px side padding, 10px top/bottom padding and 8px gaps. Cards live in a
+  single row that never wraps: when there are more cards than fit, the row
+  pages sideways instead of scrolling vertically. Cards are 84px tall, with 8px
+  padding, 4px inner gaps and 10px corners; the row is split into `cols`
+  columns and `cardWFor` hands each card an equal share of that width. A 1px
+  border is present but fully
   transparent. An idle card is `#1c1c1c`; hovering it lifts it to `#202020`
   with a `#454545` outline. The active card has no fill at all and a 4px
   `#89b4fa` bar across its top edge, rounded to the card's corners.
@@ -30,20 +34,22 @@ preview was captured at zoom 0.8):
   colors: `#22a99a`, `#e3814f`, `#5b8def`, `#8b7cf6`, `#3fae6a`, `#d9649a`),
   the project name at 12px medium, a 6px status dot, a 10.5px muted
   `repo · branch` line (or an em dash), and a 10px dim line with the status
-  word, `wt` for a worktree and `↑n` / `↓n` ahead/behind counts. A 28px round
-  `+` button closes the last row, filled with `t.raised` (`#343434` here) —
-  visibly brighter than the cards.
+  word, `wt` for a worktree and `↑n` / `↓n` ahead/behind counts. Two 24px
+  round `‹ ›` arrows page the row (dimmed when there is nothing to reach in
+  that direction), then a 28px round `+` button, filled with `t.raised`
+  (`#343434` here) — visibly brighter than the cards.
 - **Work area**: a 42px tab strip, then the tab's terminals with 8px padding
   and gap, 10px corner radius, zero-width border and focus ring, a 30px pane
   header always shown on top, terminal padding `[14, 12]` and terminal
   background `#202020`. A 368px Files/Changes column exists but is hidden.
   A 28px status strip sits at the bottom of this area.
-- **Agents band**, 110px, full width, same `#161616` panel and the same 84px
-  card grid. Idle and hover fills are the same, but the active card's 4px blue
+- **Agents band**, 110px, full width, same `#161616` panel, the same 84px
+  card row and the same `‹ ›` paging arrows. Idle and hover fills are the
+  same, but the active card's 4px blue
   bar runs along its **bottom** edge. Each card shows a 16px program icon, a
   12px name, a compact status badge, a 10.5px muted line with the project
   name (or an em dash), and a 10px dim line with the program name, elapsed
-  time and status word. A 28px round sort button closes the last row.
+  time and status word. A 28px round sort button follows the arrows.
 - **Type and colour**: the root sets `Sarasa Mono SC XLight` at 18px for
   terminals and `JetBrains Mono` for the UI; card text is 12 / 10.5 / 10px.
   All dividers are 0px wide. The bundled theme `ghostty-mocha` gives
@@ -171,9 +177,19 @@ preview was captured at zoom 0.8):
   existing theme with the same name — rename the file and the field together.
 - **Icons are shipped assets.** The `mods/workspace-chrome/*.svg` paths are
   not in this folder; a Herdr release that renames them leaves blank buttons.
-- **Sizes are fixed.** Cards are 84px tall inside a 110px band, so a second
-  row needs the scrollbar. Text truncates with no full-name tooltip. The
-  panel's `min: 90` sets the smallest useful band.
+- **The card row pages itself, it does not scroll.** Herdr turns horizontal
+  wheel/trackpad deltas into terminal mouse buttons 6/7 before a mod container
+  ever sees them, so `overflow_x_scrollbar()` does nothing here and side-swipes
+  are swallowed. The row is therefore a fixed-width `overflow_hidden()` box
+  holding an `h_flex().ml(-offset)`: `on_scroll_wheel` reads `delta.x` when it
+  dominates and falls back to `delta.y`, and the two `‹ ›` arrows page by
+  `max(cardW + 8, 80% of the viewport)`. `offset` is clamped to
+  `[0, content - viewport]` every render. Bind `on_click` on the arrows
+  unconditionally and bail out inside the callback — wrapping them in
+  `.when(...)` silently drops the handler.
+- **Sizes are fixed.** Cards are 84px tall inside a 110px band, and the row
+  keeps a single line however many cards exist. Text truncates with no
+  full-name tooltip. The panel's `min: 90` sets the smallest useful band.
 - **Personal settings are not shared.** `zoom`, `appearance`,
   `minimum_contrast` and telemetry are not in this folder. At zoom 1 the
   sizes above are literal; `preview.png` was captured at zoom 0.8.
@@ -194,6 +210,9 @@ preview was captured at zoom 0.8):
 - The window shows a brand strip, a band of cards, one borderless terminal,
   then a band of cards — no sidebar and no footer buttons.
 - Narrowing the window reduces the number of card columns; widening adds them.
+- Adding more projects than fit keeps the row on one line: the right `›`
+  lightens, `‹` stays dim, wheel and trackpad move the row sideways, and the
+  `+` button stays visible at the right edge instead of wrapping below.
 - Selecting another project: its card turns transparent with a blue bar on
   top, and the previous card returns to `#1c1c1c`. Selecting another agent:
   its card turns transparent with a blue bar on the bottom.

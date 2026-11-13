@@ -457,30 +457,33 @@ export default class Spaces extends View {
       .child(div().absolute().right(5).text_color(tone(t, w.status)).child(glyph(w.status))));
   }
 
-  // Cards read left to right, wrapping into rows by the block's measured
-  // width. Invisible spacers keep the last row's cards the same size.
-  cardRows(cards, cols, action) {
-    const out = [];
-    const spacer = () => div().flex_1().min_w(0);
-    const actionCell = () => div().flex_1().min_w(0).flex().items_center().justify_end().child(action);
-    const tailRow = () => {
-      const tail = Array.from({ length: cols - 1 }, spacer);
-      return h_flex().gap(8).h(84).flex_none().children([...tail, actionCell()]);
-    };
-    for (let i = 0; i < cards.length; i += cols) {
-      const slice = cards.slice(i, i + cols);
-      const isLast = i + cols >= cards.length;
-      const fillers = Array.from({ length: cols - slice.length }, spacer);
-      if (isLast && action && fillers.length) fillers[fillers.length - 1] = actionCell();
-      out.push(h_flex().gap(8).h(84).flex_none().children([...slice, ...fillers]));
-      // Last row is full: the action gets its own row, still pinned to the right.
-      if (isLast && action && !fillers.length) out.push(tailRow());
-    }
-    if (action && !out.length) out.push(tailRow());
-    return out;
+  // Cards live in one row. Wheel and trackpad deltas move the row sideways by
+  // hand: Herdr turns horizontal deltas into terminal button 6/7 presses before
+  // a container sees them, so the vertical component drives the offset here.
+  // Arrow buttons page the row when there is nowhere to scroll.
+  cardRow(cards, action, maxScroll, arrows) {
+    return h_flex()
+      .flex_1()
+      .min_h(0)
+      .items_center()
+      .child(
+        div()
+          .flex_1()
+          .min_w(0)
+          .overflow_hidden()
+          .on_scroll_wheel((e, cx) => {
+            if (maxScroll <= 0) return;
+            const d = Math.abs(e.delta.x) > Math.abs(e.delta.y) ? e.delta.x : e.delta.y;
+            const next = Math.max(0, Math.min(maxScroll, this.offset + d));
+            if (next !== this.offset) { this.offset = next; cx.notify(); }
+          })
+          .child(h_flex().ml(-this.offset).gap(8).items_center().flex_none().children(cards)),
+      )
+      .child(arrows)
+      .child(div().flex_none().pl(8).child(action));
   }
 
-  card({ w, g, tree }, t) {
+  card({ w, g, tree }, t, cw) {
     const on = w.active;
     const colors = shared("space.colors") ?? {};
     const color = colors[w.id] ?? "ansi6";
@@ -496,8 +499,8 @@ export default class Spaces extends View {
     return v_flex()
       .id(`space-${w.id}`)
       .relative()
-      .flex_1()
-      .min_w(0)
+      .w(cw)
+      .flex_none()
       .h(84)
       .p(8)
       .gap(4)
@@ -528,6 +531,9 @@ export default class Spaces extends View {
     const t = theme();
     // 120 is the smallest useful card; 8 the gutter, 12 the side padding.
     const colsFor = (w) => Math.max(1, Math.floor(((w ?? 1080) - 24 + 8) / (120 + 8)));
+    // The width that lets exactly `cols` cards fill the band, leaving 36px for
+    // the action button, 60px for the two paging arrows, and their gaps.
+    const cardWFor = (w, cols) => Math.max(88, Math.floor(((w ?? 1080) - 24 - 36 - 60 - 8 * (cols - 1)) / cols));
     const palette = ["ansi6", "ansi3", "ansi4", "ansi5", "ansi2", "ansi1"];
     const sp = spaces();
     const ids = new Set(sp.map(p => p.id));
@@ -540,12 +546,36 @@ export default class Spaces extends View {
       changed = true;
     }
     if (changed) setShared("space.colors", kept);
-    const cards = this.ordered().map(r => this.card(r, t));
+    const cols = this.cols ?? colsFor(1080);
+    const cw = this.cardW ?? cardWFor(1080, cols);
+    const cards = this.ordered().map(r => this.card(r, t, cw));
     const newButton = div().id("space-new").size(28).rounded_full().border_1().border_color(t.border)
       .bg(t.raised).flex().items_center().justify_center().text_color(t.muted)
       .hover(s => s.bg(t.hover).text_color(t.foreground)).cursor_pointer()
       .on_click(() => run("space.new")).tooltip("New space")
       .child(svg("mods/workspace-chrome/plus.svg").size(14));
+    // Paging: wheel/trackpad moves the row, these arrows page it. The arrows
+    // hold their space even when idle so card widths never jump.
+    const winW = this.w ?? 1080;
+    const viewport = Math.max(0, winW - 24 - 36 - 60);
+    const content = cards.length > 0 ? cards.length * cw + (cards.length - 1) * 8 : 0;
+    const maxScroll = Math.max(0, content - viewport);
+    this.offset = Math.max(0, Math.min(this.offset ?? 0, maxScroll));
+    const page = Math.max(cw + 8, viewport * 0.8);
+    const arrow = (dir) => {
+      const on = dir < 0 ? this.offset > 0 : this.offset < maxScroll;
+      return div().id(`space-page-${dir < 0 ? "prev" : "next"}`).size(24).flex_none().rounded_full()
+        .flex().items_center().justify_center().text_size(14)
+        .text_color(on ? t.muted : "#2f2f2f")
+        .when(on, el => el.cursor_pointer().hover(s => s.bg(t.hover).text_color(t.foreground)))
+        .on_click((_e, cx) => {
+          if (!on) return;
+          this.offset = Math.max(0, Math.min(maxScroll, this.offset + dir * page));
+          cx.notify();
+        })
+        .child(dir < 0 ? "\u2039" : "\u203a");
+    };
+    const arrows = h_flex().flex_none().gap(4).child(arrow(-1)).child(arrow(1));
     return v_flex()
       .id("spaces-cards-root")
       .size_full()
@@ -553,11 +583,14 @@ export default class Spaces extends View {
       .bg(t.chrome)
       .text_size(13)
       .on_size_change((size, cx) => {
-        const cols = colsFor(size.width);
-        if (this.cols !== cols) { this.cols = cols; cx.notify(); }
+        const c = colsFor(size.width);
+        const w = cardWFor(size.width, c);
+        if (this.cols !== c || this.cardW !== w || this.w !== size.width) {
+          this.cols = c; this.cardW = w; this.w = size.width; cx.notify();
+        }
       })
-      .child(v_flex().flex_1().min_h(0).px(12).pt(10).pb(10).gap(8).overflow_y_scrollbar().mode("always")
+      .child(div().flex_1().min_h(0).px(12).pt(10).pb(10)
         .on_mouse_up("left", (_e, cx) => { this.pressed = null; cx.notify(); })
-        .children(this.cardRows(cards, this.cols ?? colsFor(1080), newButton)));
+        .child(this.cardRow(cards, newButton, maxScroll, arrows)));
   }
 }

@@ -211,6 +211,32 @@ export default class Agents extends View {
     return div().size(7).mx(3).flex_none().rounded(4).bg(a.status === "done" ? color : t.dim + "00");
   }
 
+  // Cards live in one row; wheel and trackpad deltas move the row sideways by
+  // hand (Herdr turns horizontal deltas into terminal button presses before a
+  // container sees them, so the vertical component drives the offset too). The
+  // arrows page the row, and the sort button stays pinned at the right edge.
+  cardRow(cards, action, maxScroll, arrows) {
+    return h_flex()
+      .flex_1()
+      .min_h(0)
+      .items_center()
+      .child(
+        div()
+          .flex_1()
+          .min_w(0)
+          .overflow_hidden()
+          .on_scroll_wheel((e, cx) => {
+            if (maxScroll <= 0) return;
+            const d = Math.abs(e.delta.x) > Math.abs(e.delta.y) ? e.delta.x : e.delta.y;
+            const next = Math.max(0, Math.min(maxScroll, this.offset + d));
+            if (next !== this.offset) { this.offset = next; cx.notify(); }
+          })
+          .child(h_flex().ml(-this.offset).gap(8).items_center().flex_none().children(cards)),
+      )
+      .child(arrows)
+      .child(div().flex_none().pl(8).child(action));
+  }
+
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
@@ -407,6 +433,13 @@ export default class Agents extends View {
       : groups.flatMap((g) => [header(g), ...(this.folded.has(g.id) ? [] : g.members.flatMap(withKids))]);
 
     const now2 = Date.now();
+    // 120 is the smallest useful card; 8 the gutter, 12 the side padding.
+    const colsFor = (w) => Math.max(1, Math.floor(((w ?? 1080) - 24 + 8) / (120 + 8)));
+    // The width that lets exactly `cols` cards fill the band, leaving 36px for
+    // the sort button, 60px for the two paging arrows, and their gaps.
+    const cardWFor = (w, cols) => Math.max(88, Math.floor(((w ?? 1080) - 24 - 36 - 60 - 8 * (cols - 1)) / cols));
+    const cols = this.cols ?? colsFor(1080);
+    const cw = this.cardW ?? cardWFor(1080, cols);
     const cards = list.map((a) => {
       const label = labels.get(a.address);
       const pic = icon(a.program, 16, t.foreground);
@@ -419,8 +452,8 @@ export default class Agents extends View {
       return v_flex()
         .id(`ag-${a.address}`)
         .relative()
-        .flex_1()
-        .min_w(0)
+        .w(cw)
+        .flex_none()
         .h(84)
         .p(8)
         .gap(4)
@@ -446,33 +479,33 @@ export default class Agents extends View {
           .child(div().flex_none().text_color(t[a.status] ?? t.dim).child(a.status)));
     });
 
-    // 120 is the smallest useful card; 8 the gutter, 12 the side padding.
-    const colsFor = (w) => Math.max(1, Math.floor(((w ?? 1080) - 24 + 8) / (120 + 8)));
-    const cols = this.cols ?? colsFor(1080);
     const sortButton = div().id("ag-sort").size(28).rounded_full().border_1().border_color(t.border)
       .bg(t.raised).flex().items_center().justify_center().text_color(t.muted)
       .hover(s => s.bg(t.hover).text_color(t.foreground)).cursor_pointer()
       .on_click(() => openOverlay({ mod: "agents-cards", kind: "popup", width: 200, height: 140, props: { sortMenu: true } }))
       .tooltip(`Sort agents: ${sort.label}`)
       .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14));
-    const spacer = () => div().flex_1().min_w(0);
-    const sortCell = () => div().flex_1().min_w(0).flex().items_center().justify_end().child(sortButton);
-    const cardRows = [];
-    for (let i = 0; i < cards.length; i += cols) {
-      const slice = cards.slice(i, i + cols);
-      const isLast = i + cols >= cards.length;
-      const fillers = Array.from({ length: cols - slice.length }, spacer);
-      if (isLast && fillers.length) fillers[fillers.length - 1] = sortCell();
-      cardRows.push(h_flex().gap(8).h(84).flex_none().children([...slice, ...fillers]));
-      if (isLast && !fillers.length) {
-        const tail = Array.from({ length: cols - 1 }, spacer);
-        cardRows.push(h_flex().gap(8).h(84).flex_none().children([...tail, sortCell()]));
-      }
-    }
-    if (!cardRows.length) {
-      const tail = Array.from({ length: cols - 1 }, spacer);
-      cardRows.push(h_flex().gap(8).h(84).flex_none().children([...tail, sortCell()]));
-    }
+
+    const winW = this.w ?? 1080;
+    const viewport = Math.max(0, winW - 24 - 36 - 60);
+    const content = cards.length > 0 ? cards.length * cw + (cards.length - 1) * 8 : 0;
+    const maxScroll = Math.max(0, content - viewport);
+    this.offset = Math.max(0, Math.min(this.offset ?? 0, maxScroll));
+    const page = Math.max(cw + 8, viewport * 0.8);
+    const arrow = (dir) => {
+      const on = dir < 0 ? this.offset > 0 : this.offset < maxScroll;
+      return div().id(`ag-page-${dir < 0 ? "prev" : "next"}`).size(24).rounded_full()
+        .flex().items_center().justify_center().text_size(14)
+        .text_color(on ? t.muted : "#2f2f2f")
+        .when(on, el => el.cursor_pointer()
+          .hover(s => s.bg(t.hover).text_color(t.foreground))
+          .on_click((_e, cx2) => {
+            this.offset = Math.max(0, Math.min(maxScroll, this.offset + dir * page));
+            cx2.notify();
+          }))
+        .child(dir < 0 ? "\u2039" : "\u203a");
+    };
+    const arrows = h_flex().flex_none().gap(4).child(arrow(-1)).child(arrow(1));
 
     return v_flex()
       .id("agents-cards-root")
@@ -480,13 +513,16 @@ export default class Agents extends View {
       .min_h(0)
       .bg(t.chrome)
       .text_size(13)
-      .on_size_change((size, cx) => {
+      .on_size_change((size, cx2) => {
         const c = colsFor(size.width);
-        if (this.cols !== c) { this.cols = c; cx.notify(); }
+        const w2 = cardWFor(size.width, c);
+        if (this.cols !== c || this.cardW !== w2 || this.w !== size.width) {
+          this.cols = c; this.cardW = w2; this.w = size.width; cx2.notify();
+        }
       })
       .when(list.length === 0, el =>
         el.child(div().px(12).text_size(12).text_color(t.dim).child("No agent status yet. Agents show up here when they report their status.")))
-      .child(v_flex().id("ag-list").flex_1().min_h(0).px(12).pt(10).pb(10).gap(8)
-        .overflow_y_scrollbar().mode("always").children(cardRows));
+      .child(div().id("ag-list").flex_1().min_h(0).px(12).pt(10).pb(10)
+        .child(this.cardRow(cards, sortButton, maxScroll, arrows)));
   }
 }
