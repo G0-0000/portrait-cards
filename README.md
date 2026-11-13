@@ -16,6 +16,11 @@ a 4px blue bar — on top for projects, on the bottom for agents.
   `keys.json` into your own, then
   `herdr-app do layout.switch --name portrait-cards`. Never overwrite a name
   you already have.
+- **Keys:** `⌘↑ ⌘↓ ⌘← ⌘→` all step through agents. They are bound in three
+  sections of `keys.json` (`global`, `terminal`, `layout:portrait-cards`)
+  because `terminal` outranks `global`. As a side effect the terminal no longer
+  receives `⌘←` / `⌘→` for beginning/end of line — Ctrl-A / Ctrl-E still work,
+  or drop those two keys from `terminal` to keep it.
 - **Gallery:** this repo carries the `herdr-layout` topic, so it appears at
   herdr.dev/layouts.
 

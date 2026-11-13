@@ -63,9 +63,10 @@ preview was captured at zoom 0.8):
   menu; dragging a card onto another reorders spaces, with a 2px accent line
   showing the insertion point. The round `+` creates a new space.
 - Click an agent card to focus its pane. The card order is passed to
-  `setAgentOrder()` on every render, so `cmd-up` / `cmd-down` (from
-  `keys.json`) step through agents in the order the cards are drawn: left to
-  right, then down. The round sort button opens a 200x140 popup with
+  `setAgentOrder()` on every render, so `cmd-up` / `cmd-down` and `cmd-left` /
+  `cmd-right` (all four from `keys.json`) step through agents in the order the
+  cards are drawn: left to right, then down. The round sort button opens a
+  200x140 popup with
   **Priority** and **Grouped by space**; choosing one stores the choice and
   reorders the cards.
 - Agent states: `working` is a 12px spinner turning once per 900ms plus the
@@ -96,6 +97,11 @@ preview was captured at zoom 0.8):
   `titlebar: none`, `traffic_lights: [12, 16]`, and
   `cloned_from: {name: main, version: 0.1.15}`. There is deliberately no
   `sidebar` node and no zero-height rail block.
+- `keys.json`: three sections, each with the same four agent bindings —
+  `global`, `terminal` and `layout:portrait-cards`. Use arrow keys to walk the
+  card grid, because the cards are laid out left to right rather than top to
+  bottom. All three are needed: `terminal` outranks `global`, so a global-only
+  binding is shadowed while a pane is focused.
 - `mods/spaces-cards/` and `mods/agents-cards/`: `main.js` plus `mod.json`
   (`place: none`), personal clones of Herdr's shipped `spaces` and `agents`
   mods. Keep the whole file: machine listing, git polling, status tracking,
@@ -139,6 +145,11 @@ preview was captured at zoom 0.8):
   `sidebar` back without revisiting them, and do not bind
   `layout.toggle:sidebar` or `sidebar-rail.toggle`: neither has a target in
   this layout. The published build ships no rail mod and no `cmd-b`.
+- **`cmd-left` / `cmd-right` are taken.** The `terminal` section overrides
+  what those two keys normally send (Ctrl-A / Ctrl-E, beginning and end of
+  line). If you want line editing back, drop them from `terminal` and keep
+  only `cmd-up` / `cmd-down`, or rebind the agents to `cmd-alt-left` /
+  `cmd-alt-right`. Ctrl-A / Ctrl-E still reach the shell when unbound.
 - **Card fills are hard-coded.** `t.raised` is `#343434` in this theme — far
   brighter than the terminal — so idle cards use `#1c1c1c` and hover
   `#202020`, named `CARD_BG` / `CARD_HOVER` at the top of each `card()`.
@@ -188,8 +199,8 @@ preview was captured at zoom 0.8):
   its card turns transparent with a blue bar on the bottom.
 - Hovering an idle card turns it `#202020` with a gray outline; hovering an
   active card leaves it transparent.
-- `cmd-up` / `cmd-down` move the active agent in the order the cards are
-  drawn.
+- `cmd-up` / `cmd-down` / `cmd-left` / `cmd-right` all move the active agent
+  in the order the cards are drawn, including while a terminal pane has focus.
 - The round `+` creates a space; the round sort button opens a popup with
   Priority and Grouped by space and picking one reorders the cards.
 - `herdr-app shot` produces a frame with the same regions as `preview.png`.
