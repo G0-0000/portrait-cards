@@ -25,8 +25,9 @@ a 4px blue bar — on top for projects, on the bottom for agents.
   those two keys for paging.
 - **Right-click:** an agent card opens **New terminal** / **Split right** /
   **Split down** for that card's space and pane. A project card opens Herdr's
-  own space menu, where **New terminal** is the second item — that one item
-  lives in Herdr's `menu` mod, so see RECIPE.md for the two-line change.
+  own space menu, and terminal content opens its pane menu — **New terminal**
+  is an item in both. Those two items live in Herdr's `menu` mod, so see
+  RECIPE.md for the two one-line changes.
 - **Trackpad swiping is not included.** Herdr turns a two-finger horizontal
   swipe into a `MouseDown(Navigate)` event, which neither `keys.json` nor a mod
   can read (the mod bridge reports it as `"left"`), so a swipe gesture needs a

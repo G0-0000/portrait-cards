@@ -167,12 +167,16 @@ preview was captured at zoom 0.8):
   page the program. Drop those two from `terminal` and keep them in `global`
   only if that is wrong for you; `cmd-[` / `cmd-]` still reach the agents
   from a focused terminal.
-- **`New terminal` on a project card lives in Herdr's `menu` mod.** The card
-  only calls `openOverlay({ mod: "menu", props: { tab: "space", target } })`;
-  the items are hard-coded in `mods/menu/main.js`, so this folder does not
-  carry that file. Add `["New terminal", "tab.new", { space: tg.id }]` to its
-  `case "space":` array, right after **Rename**. Editing that file stops
-  Herdr from auto-replacing it on upgrade (it tracks a hash per file in
+- **`New terminal` in the project and terminal menus lives in Herdr's `menu`
+  mod.** A project card only calls
+  `openOverlay({ mod: "menu", props: { tab: "space", target } })`, and a
+  right-click on terminal content opens the same mod with `tab: "pane"`. The
+  items are hard-coded in `mods/menu/main.js`, so this folder does not carry
+  that file. Two one-line additions:
+  `["New terminal", "tab.new", { space: tg.id }]` in the `case "space":`
+  array right after **Rename**, and `["New terminal", "tab.new", {}]` in the
+  `case "pane":` array after **Split down**. Editing that file stops Herdr
+  from auto-replacing it on upgrade (it tracks a hash per file in
   `installed.json`), which is the intended behaviour. The agent band needs
   none of this: its right-click popup is `cardMenu()` inside
   `agents-cards`.
@@ -246,7 +250,8 @@ preview was captured at zoom 0.8):
 - Right-clicking an agent card opens a three-item popup: **New terminal** adds
   a tab to that card's space, **Split right** and **Split down** add a pane
   beside that card's pane. Right-clicking a project card shows Herdr's space
-  menu with **New terminal** as its second item.
+  menu with **New terminal** as its second item, and right-clicking terminal
+  content shows the pane menu with **New terminal** under **Split down**.
 - The round `+` creates a space; the round sort button opens a popup with
   Priority and Grouped by space and picking one reorders the cards.
 - `herdr-app shot` produces a frame with the same regions as `preview.png`.
