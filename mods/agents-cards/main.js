@@ -158,6 +158,38 @@ export default class Agents extends View {
         .when(s.id === on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)))));
   }
 
+  // Right-click on a card: start a terminal from it. The popup carries the
+  // card's own ids so the commands land where the person pointed.
+  cardMenu(t) {
+    const p = props() ?? {};
+    const item = (id, icon, label, go) => h_flex()
+      .id(id)
+      .h(31)
+      .px(8)
+      .gap(9)
+      .rounded(7)
+      .flex_none()
+      .items_center()
+      .text_color(t.foreground)
+      .hover((el) => el.bg(t.hover))
+      .cursor_pointer()
+      .on_click(go)
+      .child(svg(`mods/workspace-chrome/${icon}.svg`).size(14).flex_none().text_color(t.muted))
+      .child(div().flex_1().child(label));
+    const go = (command, args) => {
+      closeOverlay(p.overlay);
+      run(command, args);
+    };
+    return v_flex()
+      .w_full()
+      .p(5)
+      .bg(t.popover)
+      .text_size(12.8)
+      .child(item("cm-tab", "plus", "New terminal", () => go("tab.new", { space: p.space })))
+      .child(item("cm-right", "panel-right", "Split right", () => go("pane.split", { direction: "right", pane: p.pane })))
+      .child(item("cm-down", "sidebar", "Split down", () => go("pane.split", { direction: "down", pane: p.pane })));
+  }
+
   peek(addr) {
     run("terminal.peek", { terminal: addr });
   }
@@ -240,6 +272,7 @@ export default class Agents extends View {
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
+    if (props()?.cardMenu) return this.cardMenu(t);
     const collapsed = narrow();
     const sort = sortOf();
     let list = agents();
@@ -464,6 +497,10 @@ export default class Agents extends View {
         .when(!a.focused, el => el.hover((s) => s.bg(CARD_HOVER).border_color(t.accent)))
         .cursor_pointer()
         .on_click(() => run("pane.focus", { pane: a.pane }))
+        .on_mouse_down("right", () => openOverlay({
+          mod: "agents-cards", kind: "popup", width: 190, height: 115,
+          props: { cardMenu: true, space: a.space, pane: a.pane, terminal: a.address },
+        }))
         .when(a.focused, el => el.child(
           div().absolute().left(0).right(0).bottom(0).h(4).bg(ACTIVE).rounded_b(10)))
         .child(h_flex().gap(6).items_center().flex_none()

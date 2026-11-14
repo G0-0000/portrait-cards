@@ -66,11 +66,16 @@ preview was captured at zoom 0.8):
   width. The round action button always sits at the right edge of the band,
   just past the paging arrows, in view however far the row is scrolled.
 - Click a project card to select that space; right-click opens Herdr's space
-  menu; dragging a card onto another reorders spaces, with a 2px accent line
-  showing the insertion point. The round `+` creates a new space.
-- Click an agent card to focus its pane. The card order is passed to
-  `setAgentOrder()` on every render, so `cmd-up` / `cmd-down` and `pageup` /
-  `pagedown` (all four from `keys.json`) step through agents in the order the
+  menu, whose first two items are **Rename** and **New terminal** (a tab in
+  that space); dragging a card onto another reorders spaces, with a 2px accent
+  line showing the insertion point. The round `+` creates a new space.
+- Click an agent card to focus its pane. Right-click opens this mod's own
+  190x115 popup with **New terminal** (a tab in the card's space), **Split
+  right** and **Split down** (a pane beside the card's pane) — the popup
+  carries the card's own space and pane ids, so the command lands where you
+  pointed rather than on whatever was focused. The card order is passed to
+  `setAgentOrder()` on every render, so `pageup` / `pagedown` (from
+  `keys.json`) step through agents in the order the
   cards are drawn: left to right. The round sort button opens a
   200x140 popup with
   **Priority** and **Grouped by space**; choosing one stores the choice and
@@ -151,16 +156,26 @@ preview was captured at zoom 0.8):
   `sidebar` back without revisiting them, and do not bind
   `layout.toggle:sidebar` or `sidebar-rail.toggle`: neither has a target in
   this layout. The published build ships no rail mod and no `cmd-b`.
-- **Agent keys avoid `cmd-left` / `cmd-right`.** Those two are line-home and
-  line-end in every macOS text field, and binding them to `agent.prev` /
-  `agent.next` in the `terminal` section takes them away from every prompt.
-  The published `keys.json` pages agents with `pageup` / `pagedown` (fn-Up /
-  fn-Down on a laptop) plus `cmd-up` / `cmd-down` instead. The trade that
-  buys: inside a full-screen program — `less`, `vim`, `htop` — PageUp and
-  PageDown now switch agents rather than page the program. If that is wrong
-  for you, drop the two keys from `terminal` and keep them in `global` only;
-  `cmd-[` / `cmd-]` and `cmd-up` / `cmd-down` still reach the agents from a
-  focused terminal.
+- **Agent keys avoid every arrow key.** `cmd-left` / `cmd-right` are
+  line-home and line-end in every macOS text field, and `cmd-up` / `cmd-down`
+  are the usual history and scroll keys. Binding any of them to
+  `agent.prev` / `agent.next` in the `terminal` section takes them away from
+  every prompt. The published `keys.json` pages agents with `pageup` /
+  `pagedown` only — fn-Up / fn-Down on a laptop, two ordinary keys on a
+  mechanical board. The trade that buys: inside a full-screen program —
+  `less`, `vim`, `htop` — PageUp and PageDown now switch agents rather than
+  page the program. Drop those two from `terminal` and keep them in `global`
+  only if that is wrong for you; `cmd-[` / `cmd-]` still reach the agents
+  from a focused terminal.
+- **`New terminal` on a project card lives in Herdr's `menu` mod.** The card
+  only calls `openOverlay({ mod: "menu", props: { tab: "space", target } })`;
+  the items are hard-coded in `mods/menu/main.js`, so this folder does not
+  carry that file. Add `["New terminal", "tab.new", { space: tg.id }]` to its
+  `case "space":` array, right after **Rename**. Editing that file stops
+  Herdr from auto-replacing it on upgrade (it tracks a hash per file in
+  `installed.json`), which is the intended behaviour. The agent band needs
+  none of this: its right-click popup is `cardMenu()` inside
+  `agents-cards`.
 - **Card fills are hard-coded.** `t.raised` is `#343434` in this theme — far
   brighter than the terminal — so idle cards use `#1c1c1c` and hover
   `#202020`, named `CARD_BG` / `CARD_HOVER` at the top of each `card()`.
@@ -223,10 +238,15 @@ preview was captured at zoom 0.8):
   its card turns transparent with a blue bar on the bottom.
 - Hovering an idle card turns it `#202020` with a gray outline; hovering an
   active card leaves it transparent.
-- `cmd-up` / `cmd-down` / `pageup` / `pagedown` all move the active agent in
+- `pageup` / `pagedown` move the active agent in
   the order the cards are drawn, including while a terminal pane has focus —
-  and `cmd-left` / `cmd-right` still move the cursor to the start and end of
+  and `cmd-up` / `cmd-down` / `cmd-left` / `cmd-right` all still reach the
+  program, `cmd-left` and `cmd-right` moving the cursor to the start and end of
   the line inside the terminal.
+- Right-clicking an agent card opens a three-item popup: **New terminal** adds
+  a tab to that card's space, **Split right** and **Split down** add a pane
+  beside that card's pane. Right-clicking a project card shows Herdr's space
+  menu with **New terminal** as its second item.
 - The round `+` creates a space; the round sort button opens a popup with
   Priority and Grouped by space and picking one reorders the cards.
 - `herdr-app shot` produces a frame with the same regions as `preview.png`.
