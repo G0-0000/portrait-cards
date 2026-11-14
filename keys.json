@@ -2,19 +2,19 @@
   "global": {
     "cmd-up": "agent.prev",
     "cmd-down": "agent.next",
-    "cmd-left": "agent.prev",
-    "cmd-right": "agent.next"
+    "pageup": "agent.prev",
+    "pagedown": "agent.next"
   },
   "terminal": {
     "cmd-up": "agent.prev",
     "cmd-down": "agent.next",
-    "cmd-left": "agent.prev",
-    "cmd-right": "agent.next"
+    "pageup": "agent.prev",
+    "pagedown": "agent.next"
   },
   "layout:portrait-cards": {
     "cmd-up": "agent.prev",
     "cmd-down": "agent.next",
-    "cmd-left": "agent.prev",
-    "cmd-right": "agent.next"
+    "pageup": "agent.prev",
+    "pagedown": "agent.next"
   }
 }

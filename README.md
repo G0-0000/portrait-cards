@@ -16,11 +16,12 @@ a 4px blue bar — on top for projects, on the bottom for agents.
   `keys.json` into your own, then
   `herdr-app do layout.switch --name portrait-cards`. Never overwrite a name
   you already have.
-- **Keys:** `⌘↑ ⌘↓ ⌘← ⌘→` all step through agents. They are bound in three
-  sections of `keys.json` (`global`, `terminal`, `layout:portrait-cards`)
-  because `terminal` outranks `global`. As a side effect the terminal no longer
-  receives `⌘←` / `⌘→` for beginning/end of line — Ctrl-A / Ctrl-E still work,
-  or drop those two keys from `terminal` to keep it.
+- **Keys:** `⌘↑` `⌘↓` `PgUp` `PgDn` all step through agents (fn-Up / fn-Down
+  on a laptop). They are bound in three sections of `keys.json` (`global`,
+  `terminal`, `layout:portrait-cards`) because `terminal` outranks `global`.
+  `⌘←` / `⌘→` are deliberately left alone so they keep meaning start and end
+  of line; the price of `PgUp` / `PgDn` is that `less`, `vim` and `htop` no
+  longer receive those two keys for paging.
 - **Trackpad swiping is not included.** Herdr turns a two-finger horizontal
   swipe into a `MouseDown(Navigate)` event, which neither `keys.json` nor a mod
   can read (the mod bridge reports it as `"left"`), so a swipe gesture needs a

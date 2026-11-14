@@ -63,15 +63,15 @@ preview was captured at zoom 0.8):
 
 - Column count is `max(1, floor((width - 24 + 8) / 128))`, recomputed when
   the block is resized; invisible spacers keep the last row's cards the same
-  width. If the last row is exactly full, the round action button moves to a
-  row of its own.
+  width. The round action button always sits at the right edge of the band,
+  just past the paging arrows, in view however far the row is scrolled.
 - Click a project card to select that space; right-click opens Herdr's space
   menu; dragging a card onto another reorders spaces, with a 2px accent line
   showing the insertion point. The round `+` creates a new space.
 - Click an agent card to focus its pane. The card order is passed to
-  `setAgentOrder()` on every render, so `cmd-up` / `cmd-down` and `cmd-left` /
-  `cmd-right` (all four from `keys.json`) step through agents in the order the
-  cards are drawn: left to right, then down. The round sort button opens a
+  `setAgentOrder()` on every render, so `cmd-up` / `cmd-down` and `pageup` /
+  `pagedown` (all four from `keys.json`) step through agents in the order the
+  cards are drawn: left to right. The round sort button opens a
   200x140 popup with
   **Priority** and **Grouped by space**; choosing one stores the choice and
   reorders the cards.
@@ -151,11 +151,16 @@ preview was captured at zoom 0.8):
   `sidebar` back without revisiting them, and do not bind
   `layout.toggle:sidebar` or `sidebar-rail.toggle`: neither has a target in
   this layout. The published build ships no rail mod and no `cmd-b`.
-- **`cmd-left` / `cmd-right` are taken.** The `terminal` section overrides
-  what those two keys normally send (Ctrl-A / Ctrl-E, beginning and end of
-  line). If you want line editing back, drop them from `terminal` and keep
-  only `cmd-up` / `cmd-down`, or rebind the agents to `cmd-alt-left` /
-  `cmd-alt-right`. Ctrl-A / Ctrl-E still reach the shell when unbound.
+- **Agent keys avoid `cmd-left` / `cmd-right`.** Those two are line-home and
+  line-end in every macOS text field, and binding them to `agent.prev` /
+  `agent.next` in the `terminal` section takes them away from every prompt.
+  The published `keys.json` pages agents with `pageup` / `pagedown` (fn-Up /
+  fn-Down on a laptop) plus `cmd-up` / `cmd-down` instead. The trade that
+  buys: inside a full-screen program — `less`, `vim`, `htop` — PageUp and
+  PageDown now switch agents rather than page the program. If that is wrong
+  for you, drop the two keys from `terminal` and keep them in `global` only;
+  `cmd-[` / `cmd-]` and `cmd-up` / `cmd-down` still reach the agents from a
+  focused terminal.
 - **Card fills are hard-coded.** `t.raised` is `#343434` in this theme — far
   brighter than the terminal — so idle cards use `#1c1c1c` and hover
   `#202020`, named `CARD_BG` / `CARD_HOVER` at the top of each `card()`.
@@ -218,8 +223,10 @@ preview was captured at zoom 0.8):
   its card turns transparent with a blue bar on the bottom.
 - Hovering an idle card turns it `#202020` with a gray outline; hovering an
   active card leaves it transparent.
-- `cmd-up` / `cmd-down` / `cmd-left` / `cmd-right` all move the active agent
-  in the order the cards are drawn, including while a terminal pane has focus.
+- `cmd-up` / `cmd-down` / `pageup` / `pagedown` all move the active agent in
+  the order the cards are drawn, including while a terminal pane has focus —
+  and `cmd-left` / `cmd-right` still move the cursor to the start and end of
+  the line inside the terminal.
 - The round `+` creates a space; the round sort button opens a popup with
   Priority and Grouped by space and picking one reorders the cards.
 - `herdr-app shot` produces a frame with the same regions as `preview.png`.
