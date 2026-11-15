@@ -5,7 +5,9 @@
   },
   "terminal": {
     "pageup": "agent.prev",
-    "pagedown": "agent.next"
+    "pagedown": "agent.next",
+    "home": "send:\u001b[H",
+    "end": "send:\u001b[F"
   },
   "layout:portrait-cards": {
     "pageup": "agent.prev",

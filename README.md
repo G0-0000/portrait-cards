@@ -22,7 +22,10 @@ a 4px blue bar — on top for projects, on the bottom for agents.
   `terminal` outranks `global`. No arrow key is touched: `⌘←` / `⌘→` keep
   meaning start and end of line, `⌘↑` / `⌘↓` keep their history scrolling. The
   price of `PgUp` / `PgDn` is that `less`, `vim` and `htop` no longer receive
-  those two keys for paging.
+  those two keys for paging. `Home` / `End` are also bound in `terminal`, to
+  the plain `ESC [ H` / `ESC [ F` sequences: Herdr otherwise rewrites them for
+  programs that negotiate the Kitty keyboard protocol (Pi, for one), where
+  they stop working. See RECIPE.md for the byte-level detail.
 - **Right-click:** an agent card opens **New terminal** / **Split right** /
   **Split down** for that card's space and pane. A project card opens Herdr's
   own space menu, and terminal content opens its pane menu — **New terminal**

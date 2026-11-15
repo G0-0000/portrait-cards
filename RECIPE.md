@@ -114,11 +114,12 @@ preview was captured at zoom 0.8):
   `titlebar: none`, `traffic_lights: [12, 16]`, and
   `cloned_from: {name: main, version: 0.1.15}`. There is deliberately no
   `sidebar` node and no zero-height rail block.
-- `keys.json`: three sections, each with the same four agent bindings —
-  `global`, `terminal` and `layout:portrait-cards`. Use arrow keys to walk the
-  card grid, because the cards are laid out left to right rather than top to
-  bottom. All three are needed: `terminal` outranks `global`, so a global-only
-  binding is shadowed while a pane is focused.
+- `keys.json`: three sections — `global`, `terminal` and
+  `layout:portrait-cards` — each binding `pageup` / `pagedown` to
+  `agent.prev` / `agent.next`. All three are needed: `terminal` outranks
+  `global`, so a global-only binding is shadowed while a pane is focused.
+  The `terminal` section also pins `home` and `end` to the plain xterm
+  sequences `ESC [ H` and `ESC [ F` (see Watch out).
 - `mods/spaces-cards/` and `mods/agents-cards/`: `main.js` plus `mod.json`
   (`place: none`), personal clones of Herdr's shipped `spaces` and `agents`
   mods. Keep the whole file: machine listing, git polling, status tracking,
@@ -173,6 +174,16 @@ preview was captured at zoom 0.8):
   page the program. Drop those two from `terminal` and keep them in `global`
   only if that is wrong for you; `cmd-[` / `cmd-]` still reach the agents
   from a focused terminal.
+- **Home / End are pinned to their xterm sequences.** Herdr changes what those
+  two keys send once a program negotiates the Kitty keyboard protocol.
+  Measured with `cat -v` in a scratch tab: a plain shell receives `ESC [ H` /
+  `ESC [ F`; after `ESC [ >7u` / `ESC [ ?u` the same keys arrive as
+  `ESC [ 1;1:1H` / `ESC [ 1;1:1F` (Herdr answers `ESC [ ?7u`). Pi 1.5.2
+  negotiates that protocol and does not act on the second form, whereas
+  CodeBuddy does not negotiate it and keeps working. The `home` / `end`
+  bindings in `terminal` force the plain sequences for every program; pi-tui
+  lists them as legacy Home / End and matches them unconditionally. Shell
+  line editing is unchanged — those are the bytes it already expected.
 - **`New terminal` in the project and terminal menus lives in Herdr's `menu`
   mod.** A project card only calls
   `openOverlay({ mod: "menu", props: { tab: "space", target } })`, and a
