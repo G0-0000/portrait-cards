@@ -174,15 +174,27 @@ preview was captured at zoom 0.8):
   page the program. Drop those two from `terminal` and keep them in `global`
   only if that is wrong for you; `cmd-[` / `cmd-]` still reach the agents
   from a focused terminal.
-- **Home / End are pinned to their xterm sequences.** Herdr changes what those
-  two keys send once a program negotiates the Kitty keyboard protocol.
+- **A system remapper can swallow Home / End before Herdr sees them.** On the
+  author's machine Karabiner-Elements maps physical `home` → `cmd-left` and
+  `end` → `cmd-right` (AppKit's own Home / End mean document start / end, so
+  the mapping makes a mechanical board behave like macOS everywhere else).
+  With those rules live, Herdr never receives a `home` or `end` key: it gets
+  `cmd-left` / `cmd-right`, whose bytes `ESC [ 1;9D` / `ESC [ 1;9C` (measured
+  with `cat -v`) pi-tui does not recognise — and while those two keys were
+  bound to `agent.prev` / `agent.next`, pressing Home / End switched agents.
+  The fix is outside Herdr: give both Karabiner manipulators a
+  `frontmost_application_unless` condition on `^dev\.herdr\.app$`. Every
+  other app keeps the familiar mapping; Herdr gets the physical keys. If you
+  do not run a remapper, this layer does not apply to you.
+- **Home / End are then pinned to their xterm sequences.** Herdr changes what
+  those two keys send once a program negotiates the Kitty keyboard protocol.
   Measured with `cat -v` in a scratch tab: a plain shell receives `ESC [ H` /
   `ESC [ F`; after `ESC [ >7u` / `ESC [ ?u` the same keys arrive as
   `ESC [ 1;1:1H` / `ESC [ 1;1:1F` (Herdr answers `ESC [ ?7u`). Pi 1.5.2
-  negotiates that protocol and does not act on the second form, whereas
-  CodeBuddy does not negotiate it and keeps working. The `home` / `end`
-  bindings in `terminal` force the plain sequences for every program; pi-tui
-  lists them as legacy Home / End and matches them unconditionally. Shell
+  negotiates that protocol, and pi-tui does not act on the second form. The
+  `home` / `end` bindings in `terminal` force the plain sequences for every
+  program; pi-tui lists them as legacy Home / End and matches them
+  unconditionally, and `send:` is not rewritten by the Kitty layer. Shell
   line editing is unchanged — those are the bytes it already expected.
 - **`New terminal` in the project and terminal menus lives in Herdr's `menu`
   mod.** A project card only calls
