@@ -465,7 +465,6 @@ export default class Agents extends View {
       ? list.flatMap(withKids)
       : groups.flatMap((g) => [header(g), ...(this.folded.has(g.id) ? [] : g.members.flatMap(withKids))]);
 
-    const now2 = Date.now();
     // 120 is the smallest useful card; 8 the gutter, 12 the side padding.
     const colsFor = (w) => Math.max(1, Math.floor(((w ?? 1080) - 24 + 8) / (120 + 8)));
     // The width that lets exactly `cols` cards fill the band, leaving 36px for
@@ -506,14 +505,12 @@ export default class Agents extends View {
         .child(h_flex().gap(6).items_center().flex_none()
           .when(Boolean(pic), el => el.child(div().flex_none().child(pic)))
           .child(div().flex_1().min_w(0).truncate().text_size(12).font_medium().text_color(t.foreground)
-            .child(label || a.program?.name || a.address))
+            .child(a.program?.name || label || a.address))
           .child(this.status(t, a, true)))
         .child(div().flex_1().min_h(0).truncate().text_size(10.5).text_color(t.muted)
           .child(a.space_name || "\u2014"))
-        .child(h_flex().gap(4).items_center().flex_none().text_size(10).text_color(t.dim)
-          .child(div().flex_1().min_w(0).truncate().child(a.program?.name ?? ""))
-          .when(Boolean(this.since(a)), el => el.child(div().flex_none().child(duration(now2 - this.since(a)))))
-          .child(div().flex_none().text_color(t[a.status] ?? t.dim).child(a.status)));
+        .child(div().flex_none().truncate().text_size(10).text_color(t[a.status] ?? t.dim)
+          .child(a.status ?? ""));
     });
 
     const sortButton = div().id("ag-sort").size(28).rounded_full().border_1().border_color(t.border)

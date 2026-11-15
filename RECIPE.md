@@ -46,10 +46,14 @@ preview was captured at zoom 0.8):
 - **Agents band**, 110px, full width, same `#161616` panel, the same 84px
   card row and the same `‹ ›` paging arrows. Idle and hover fills are the
   same, but the active card's 4px blue
-  bar runs along its **bottom** edge. Each card shows a 16px program icon, a
-  12px name, a compact status badge, a 10.5px muted line with the project
-  name (or an em dash), and a 10px dim line with the program name, elapsed
-  time and status word. A 28px round sort button follows the arrows.
+  bar runs along its **bottom** edge. Each card has three lines: a 16px
+  program icon and the **program's name** at 12px medium (with a compact
+  status badge on the right of that line), a 10.5px muted line with the
+  **project** name (or an em dash), and a 10px line with **only the status
+  word**, coloured by that status. The first line deliberately does not use
+  the tab's name — a tab keeps whatever it was called when it was made, so a
+  tab once named `Pi` still says `Pi` after CodeBuddy replaces the program.
+  A 28px round sort button follows the arrows.
 - **Type and colour**: the root sets `Sarasa Mono SC XLight` at 18px for
   terminals and `JetBrains Mono` for the UI; card text is 12 / 10.5 / 10px.
   All dividers are 0px wide. The bundled theme `ghostty-mocha` gives
@@ -180,6 +184,14 @@ preview was captured at zoom 0.8):
   `installed.json`), which is the intended behaviour. The agent band needs
   none of this: its right-click popup is `cardMenu()` inside
   `agents-cards`.
+- **The first card line is the program, not the tab.** The original `title()`
+  prefers `tab.name`, and a named tab keeps that name when the program inside
+  it is replaced — a tab once called `Pi` still reads `Pi` after CodeBuddy
+  takes it over. The cards branch now uses
+  `a.program?.name || label || a.address`, so the tab name is only a fallback.
+  The narrow-row branch (`row()`, used when a sidebar narrows the band) still
+  uses `title()`; change both if they should agree. `programs.json` supplies
+  the display name (`CodeBuddy` for `codebuddy`) and its icon.
 - **Card fills are hard-coded.** `t.raised` is `#343434` in this theme — far
   brighter than the terminal — so idle cards use `#1c1c1c` and hover
   `#202020`, named `CARD_BG` / `CARD_HOVER` at the top of each `card()`.
@@ -240,6 +252,9 @@ preview was captured at zoom 0.8):
 - Selecting another project: its card turns transparent with a blue bar on
   top, and the previous card returns to `#1c1c1c`. Selecting another agent:
   its card turns transparent with a blue bar on the bottom.
+- An agent card's three lines read the program name, the project name and the
+  status word only — no tab name, no elapsed time. A tab named `Pi` running
+  CodeBuddy shows `CodeBuddy`, not `Pi`.
 - Hovering an idle card turns it `#202020` with a gray outline; hovering an
   active card leaves it transparent.
 - `pageup` / `pagedown` move the active agent in
