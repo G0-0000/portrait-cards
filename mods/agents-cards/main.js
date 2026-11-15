@@ -472,6 +472,7 @@ export default class Agents extends View {
     const cardWFor = (w, cols) => Math.max(88, Math.floor(((w ?? 1080) - 24 - 36 - 60 - 8 * (cols - 1)) / cols));
     const cols = this.cols ?? colsFor(1080);
     const cw = this.cardW ?? cardWFor(1080, cols);
+    const now2 = Date.now();
     const cards = list.map((a) => {
       const label = labels.get(a.address);
       const pic = icon(a.program, 16, t.foreground);
@@ -509,8 +510,10 @@ export default class Agents extends View {
           .child(this.status(t, a, true)))
         .child(div().flex_1().min_h(0).truncate().text_size(10.5).text_color(t.muted)
           .child(a.space_name || "\u2014"))
-        .child(div().flex_none().truncate().text_size(10).text_color(t[a.status] ?? t.dim)
-          .child(a.status ?? ""));
+        .child(h_flex().w_full().flex_none().items_center().justify_end().gap(4).text_size(10)
+          .when(Boolean(this.since(a)), el => el.child(div().flex_none().text_color(t.dim)
+            .child(`${duration(now2 - this.since(a))} \u00b7`)))
+          .child(div().flex_none().text_color(t[a.status] ?? t.dim).child(a.status ?? "")));
     });
 
     const sortButton = div().id("ag-sort").size(28).rounded_full().border_1().border_color(t.border)

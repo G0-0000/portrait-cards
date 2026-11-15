@@ -49,8 +49,10 @@ preview was captured at zoom 0.8):
   bar runs along its **bottom** edge. Each card has three lines: a 16px
   program icon and the **program's name** at 12px medium (with a compact
   status badge on the right of that line), a 10.5px muted line with the
-  **project** name (or an em dash), and a 10px line with **only the status
-  word**, coloured by that status. The first line deliberately does not use
+  **project** name (or an em dash), and a 10px line **right-aligned** with
+  the elapsed time in dim, a middle dot, and the status word coloured by that
+  status (`31m · idle`). Agents with no recorded status change show just the
+  word. The first line deliberately does not use
   the tab's name — a tab keeps whatever it was called when it was made, so a
   tab once named `Pi` still says `Pi` after CodeBuddy replaces the program.
   A 28px round sort button follows the arrows.
@@ -252,9 +254,10 @@ preview was captured at zoom 0.8):
 - Selecting another project: its card turns transparent with a blue bar on
   top, and the previous card returns to `#1c1c1c`. Selecting another agent:
   its card turns transparent with a blue bar on the bottom.
-- An agent card's three lines read the program name, the project name and the
-  status word only — no tab name, no elapsed time. A tab named `Pi` running
-  CodeBuddy shows `CodeBuddy`, not `Pi`.
+- An agent card's three lines read the program name, the project name, and a
+  right-aligned `elapsed · status` (or the status word alone when no time is
+  known) — never the tab name. A tab named `Pi` running CodeBuddy shows
+  `CodeBuddy`, not `Pi`, and the time counts from the last status change.
 - Hovering an idle card turns it `#202020` with a gray outline; hovering an
   active card leaves it transparent.
 - `pageup` / `pagedown` move the active agent in
